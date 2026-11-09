@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal & Dashboard Sertifikasi LSPLHNS X DLH MALANG</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(21, 128, 61, 0.09) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(249, 115, 22, 0.09) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(21, 128, 61, 0.06) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Transisi halus untuk card & input */
+        .input-modern {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .input-modern:focus {
+            transform: translateY(-1px);
+        }
+
+        /* Animasi Modal & Pop-up */
+        @keyframes modalPop {
+            0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-modal-pop {
+            animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes floatCloud {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: floatCloud 2s ease-in-out infinite;
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            green: '#15803d',
+                            greenLight: '#22c55e',
+                            greenDark: '#0f4c25',
+                            orange: '#f97316',
+                            orangeDark: '#ea580c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- ================= TOP NAVIGATION BAR (SWITCHER FORM & DASHBOARD) ================= -->
+    <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-brand-green to-brand-greenDark flex items-center justify-center text-white shadow-md shadow-green-900/20 shrink-0">
+                    <i class="fa-solid fa-leaf text-brand-orange text-lg sm:text-xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-slate-900 text-sm sm:text-base tracking-tight">LSPLHNS <span class="text-brand-orange">&times;</span> DLH MALANG</span>
+                        <span class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-brand-green border border-emerald-200">
+                            <i class="fa-solid fa-circle text-[6px] text-brand-orange animate-ping"></i> Batch Des
+                        </span>
+                    </div>
+                    <p class="text-[11px] sm:text-xs text-slate-500 font-medium">Sistem Sertifikasi Kompetensi Lingkungan Hidup</p>
+                </div>
+            </div>
+
+            <!-- View Switcher Buttons -->
+            <div class="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200/70">
+                <button type="button" id="navBtnDashboard" onclick="switchMainView('dashboard')" class="flex items-center gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-gradient-to-r from-brand-green to-brand-greenDark text-white shadow-md shadow-green-900/15">
+                    <i class="fa-solid fa-chart-pie text-brand-orange"></i>
+                    <span>Dashboard Admin</span>
+                </button>
+                <button type="button" id="navBtnForm" onclick="switchMainView('form')" class="flex items-center gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-file-signature text-brand-orange"></i>
+                    <span>Form Pendaftaran</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= TOAST NOTIFICATION CUSTOM ================= -->
+    <div id="toastNotification" class="fixed top-24 right-5 z-50 hidden max-w-sm w-full bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-3.5 transition-all duration-300">
+        <div id="toastIconBox" class="w-9 h-9 rounded-xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center shrink-0 text-brand-orange">
+            <i id="toastIcon" class="fa-solid fa-circle-info"></i>
+        </div>
+        <span id="toastMessage" class="text-sm font-medium leading-snug">Pesan notifikasi</span>
+    </div>
+
+    <!-- ================= VIEW 1: DASHBOARD ADMIN MODERN ================= -->
+    <main id="dashboardView" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        
+        <!-- Hero Banner Dashboard (Dominan Hijau & Oranye) -->
+        <div class="relative rounded-[2rem] bg-gradient-to-r from-[#0a361b] via-brand-greenDark to-brand-green p-6 sm:p-8 md:p-10 text-white overflow-hidden shadow-xl shadow-green-900/10 border border-emerald-800/40">
+            <!-- Dekorasi Oranye & Hijau -->
+            <div class="absolute -top-24 -right-24 w-80 h-80 bg-brand-orange/30 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 left-1/3 w-72 h-72 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div class="space-y-2 max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-orange text-white text-xs font-bold uppercase tracking-wider shadow-md shadow-orange-500/30">
+                        <i class="fa-solid fa-bolt"></i> Real-Time Monitoring Supabase
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight">
+                        Dashboard Pendaftaran Sertifikasi
+                    </h1>
+                    <p class="text-emerald-100/85 text-xs sm:text-sm leading-relaxed">
+                        Pantau statistik peserta, kelola berkas persyaratan di bucket <code class="bg-white/15 px-2 py-0.5 rounded text-orange-300 font-semibold">dokumen_peserta</code>, dan unduh rekapitulasi pelaksanaan 17–19 Desember.
+                    </p>
+                </div>
+
+                <!-- Action Buttons di Header Dashboard -->
+                <div class="flex flex-wrap items-center gap-3 shrink-0">
+                    <button type="button" onclick="fetchParticipantsData()" class="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-bold text-xs sm:text-sm transition-all">
+                        <i id="refreshSpinIcon" class="fa-solid fa-arrows-rotate text-brand-orange"></i>
+                        <span>Muat Ulang Data</span>
+                    </button>
+                    <button type="button" onclick="exportToCSV()" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-orange-500/30 transition-all transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-file-csv text-base"></i>
+                        <span>Export CSV / Excel</span>
+                    </button>
+                    <button type="button" onclick="openSqlHelperModal()" class="inline-flex items-center gap-2 px-3.5 py-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-950 border border-emerald-400/30 text-emerald-200 font-semibold text-xs sm:text-sm transition-all" title="Panduan Izin Baca RLS Supabase">
+                        <i class="fa-solid fa-shield-halved text-brand-orange"></i>
+                        <span class="hidden sm:inline">Info Akses RLS</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bar Info Jadwal Singkat -->
+            <div class="relative z-10 mt-6 pt-5 border-t border-white/15 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="flex items-center gap-3 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10">
+                    <i class="fa-solid fa-video text-brand-orange text-base"></i>
+                    <div>
+                        <span class="text-emerald-200/70 block text-[11px]">Tahap 1 • Pelatihan Online</span>
+                        <strong class="text-white font-bold">Kamis–Jumat, 17–18 Desember</strong>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10">
+                    <i class="fa-solid fa-hotel text-brand-orange text-base"></i>
+                    <div>
+                        <span class="text-emerald-200/70 block text-[11px]">Tahap 2 • Uji Sertifikasi Offline</span>
+                        <strong class="text-white font-bold">Sabtu, 19 Des @ Hotel Alana Malang</strong>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 bg-white/5 px-4 py-2.5 rounded-xl border border-white/10">
+                    <i class="fa-solid fa-database text-brand-orange text-base"></i>
+                    <div>
+                        <span class="text-emerald-200/70 block text-[11px]">Status Koneksi Database</span>
+                        <strong id="dbStatusBadge" class="text-emerald-300 font-bold">Terhubung ke Supabase</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning Box jika RLS SELECT belum diaktifkan di Supabase -->
+        <div id="rlsWarningBanner" class="hidden bg-orange-50 border-2 border-brand-orange/40 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-brand-orange text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-500/20">
+                    <i class="fa-solid fa-lock text-lg"></i>
+                </div>
+                <div>
+                    <h4 class="font-extrabold text-slate-900 text-sm sm:text-base">Data Belum Muncul? Periksa Izin Baca (SELECT Policy) Supabase</h4>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-0.5">
+                        Karena sebelumnya tabel <code class="font-bold text-brand-green">pendaftaran</code> dikunci ketat hanya untuk <em>INSERT</em>, Anda perlu menambahkan Policy <em>SELECT</em> agar Dashboard bisa menampilkan daftar peserta.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="loadDemoData()" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-all">
+                    <i class="fa-solid fa-flask text-brand-orange mr-1"></i> Coba Mode Simulasi
+                </button>
+                <button type="button" onclick="openSqlHelperModal()" class="px-4 py-2.5 rounded-xl bg-brand-green hover:bg-brand-greenDark text-white font-bold text-xs shadow-md transition-all">
+                    <i class="fa-solid fa-code mr-1"></i> Lihat Kode SQL Buka Akses
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= 4 KARTU KPI UTAMA ================= -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <!-- Total Pendaftar -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brand-green/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pendaftar</span>
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-green to-brand-greenDark text-white flex items-center justify-center shadow-md shadow-green-900/15">
+                        <i class="fa-solid fa-users text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="statTotalPeserta" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    <span class="text-xs font-bold text-brand-green bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">Peserta</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-check text-brand-green"></i> Batch 17–19 Desember
+                </p>
+            </div>
+
+            <!-- Kategori D3 / S1 (PPPA, PPPU, MPLB3) -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brand-orange/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Skema Penanggung Jawab</span>
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-orange to-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-500/20">
+                        <i class="fa-solid fa-user-tie text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="statTotalManager" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    <span class="text-xs font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">PPPA • PPPU • MPLB3</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-graduation-cap text-brand-orange"></i> Prasyarat Minimal D3 / S1
+                </p>
+            </div>
+
+            <!-- Kategori SMA / SMK (POPAL, POIPPU, OPLB3) -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brand-green/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Skema Operasional</span>
+                    <div class="w-11 h-11 rounded-xl bg-emerald-100 text-brand-green flex items-center justify-center border border-emerald-200">
+                        <i class="fa-solid fa-helmet-safety text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="statTotalOperator" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    <span class="text-xs font-bold text-brand-green bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">POPAL • POIPPU • OPLB3</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-wrench text-brand-green"></i> Prasyarat Minimal SMA / SMK
+                </p>
+            </div>
+
+            <!-- Kelengkapan Dokumen Lengkap (6 Berkas) -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brand-orange/5 rounded-bl-full pointer-events-none transition-transform group-hover:scale-110"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Instansi / Kota</span>
+                    <div class="w-11 h-11 rounded-xl bg-orange-100 text-brand-orange flex items-center justify-center border border-orange-200">
+                        <i class="fa-solid fa-building-circle-check text-lg"></i>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <h3 id="statTotalInstansi" class="text-3xl font-extrabold text-slate-900">0</h3>
+                    <span id="statTotalKotaBadge" class="text-xs font-bold text-brand-orange bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">0 Kota</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-folder-tree text-brand-orange"></i> Auto-folder per nama peserta
+                </p>
+            </div>
+        </div>
+
+        <!-- ================= STATISTIK DISTRIBUSI 6 SKEMA SERTIFIKASI ================= -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-orange-50 text-brand-orange border border-orange-200/60 flex items-center justify-center">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Sebaran Peserta per Skema Sertifikasi</h3>
+                        <p class="text-xs text-slate-500">Klik pada salah satu kartu skema di bawah untuk memfilter tabel peserta</p>
+                    </div>
+                </div>
+                <button type="button" onclick="filterBySkemaCard('ALL')" class="self-start sm:self-auto text-xs font-bold text-brand-green hover:text-brand-orange transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-filter-circle-xmark"></i> Tampilkan Semua Skema
+                </button>
+            </div>
+
+            <div id="skemaCardsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+                <!-- Dirender dinamis oleh JavaScript -->
+            </div>
+        </div>
+
+        <!-- ================= TABEL DATA PESERTA & FILTER PENCARIAN ================= -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <!-- Bar Pencarian & Filter -->
+            <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-brand-green border border-emerald-200/60 flex items-center justify-center">
+                        <i class="fa-solid fa-table-list"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-900">Daftar Peserta Terdaftar</h3>
+                        <p id="tableCountSubtitle" class="text-xs text-slate-500">Menampilkan 0 peserta</p>
+                    </div>
+                </div>
+
+                <!-- Kontrol Filter & Search -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                    <!-- Input Pencarian -->
+                    <div class="relative flex-1 sm:w-72">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="searchInput" placeholder="Cari nama, instansi, kota, WA..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none text-xs sm:text-sm font-medium">
+                    </div>
+
+                    <!-- Dropdown Filter Skema -->
+                    <div class="relative sm:w-48">
+                        <i class="fa-solid fa-certificate absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-orange text-sm pointer-events-none"></i>
+                        <select id="filterSkemaSelect" class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white border border-slate-200 focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none text-xs sm:text-sm font-bold text-slate-700 cursor-pointer appearance-none">
+                            <option value="ALL">Semua Skema (6)</option>
+                            <option value="PPPA">Skema PPPA</option>
+                            <option value="POPAL">Skema POPAL</option>
+                            <option value="PPPU">Skema PPPU</option>
+                            <option value="POIPPU">Skema POIPPU</option>
+                            <option value="MPLB3">Skema MPLB3</option>
+                            <option value="OPLB3">Skema OPLB3</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    </div>
+
+                    <!-- Tombol Tambah Peserta Baru -->
+                    <button type="button" onclick="switchMainView('form')" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-green hover:bg-brand-greenDark text-white font-bold text-xs sm:text-sm shadow-sm transition-all shrink-0">
+                        <i class="fa-solid fa-user-plus text-brand-orange"></i>
+                        <span>+ Tambah</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabel Responsif (Desktop) -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/80 text-slate-500 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200/80">
+                            <th class="py-3.5 px-5">Peserta & Waktu Daftar</th>
+                            <th class="py-3.5 px-4">Kontak</th>
+                            <th class="py-3.5 px-4">Instansi & Kota</th>
+                            <th class="py-3.5 px-4">Skema Uji</th>
+                            <th class="py-3.5 px-4">Berkas Persyaratan</th>
+                            <th class="py-3.5 px-5 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participantsTableBody" class="divide-y divide-slate-100 text-sm">
+                        <!-- Baris Tabel dirender oleh JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- State Kosong / Loading -->
+            <div id="tableEmptyState" class="hidden py-14 px-6 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-orange-50 text-brand-orange border border-orange-200/60 flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h4 class="font-extrabold text-slate-800 text-base">Belum Ada Data Peserta yang Cocok</h4>
+                <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-5">
+                    Coba ubah kata kunci pencarian Anda, tambah pendaftar baru melalui Form Pendaftaran, atau aktifkan data simulasi untuk mencoba fitur dashboard.
+                </p>
+                <div class="flex flex-wrap justify-center gap-2.5">
+                    <button type="button" onclick="switchMainView('form')" class="px-4 py-2.5 rounded-xl bg-brand-green text-white font-bold text-xs shadow-sm hover:bg-brand-greenDark transition-all">
+                        <i class="fa-solid fa-plus mr-1"></i> Isi Form Pendaftaran
+                    </button>
+                    <button type="button" onclick="loadDemoData()" class="px-4 py-2.5 rounded-xl bg-orange-50 text-brand-orange border border-orange-200 font-bold text-xs hover:bg-orange-100 transition-all">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Muat Data Contoh (Demo)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ================= VIEW 2: FORMULIR PENDAFTARAN PESERTA ================= -->
+    <section id="formView" class="hidden flex-1 py-6 sm:py-10 px-3 sm:px-6 flex justify-center items-start">
+        <div class="w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-[2.25rem] shadow-[0_25px_70px_-15px_rgba(21,128,61,0.12)] overflow-hidden border border-slate-200/80">
+            
+            <!-- Header Section Modern -->
+            <div class="bg-gradient-to-br from-[#0a361b] via-brand-greenDark to-brand-green p-8 sm:p-10 md:p-12 text-center relative overflow-hidden">
+                <div class="absolute -top-24 -right-24 w-96 h-96 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-brand-orange/25 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white font-semibold text-xs tracking-wider uppercase shadow-sm mb-5">
+                        <i class="fa-solid fa-circle text-[8px] text-brand-orange animate-ping"></i>
+                        Pendaftaran Batch Desember Dibuka
+                    </div>
+
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">
+                        Sertifikasi Kompetensi
+                    </h1>
+                    <div class="inline-flex items-center gap-2.5 text-emerald-100/90 font-semibold text-base sm:text-lg md:text-xl">
+                        <span>LSPLHNS</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>
+                        <span>DLH MALANG</span>
+                    </div>
+                    
+                    <!-- Jadwal Pelaksanaan Rangkaian Kegiatan -->
+                    <div class="mt-9 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto text-left">
+                        <!-- Pelatihan Online -->
+                        <div class="group bg-white/10 hover:bg-white/15 backdrop-blur-md p-5 rounded-2xl border border-white/15 transition-all duration-300 flex items-start gap-4">
+                            <div class="bg-gradient-to-br from-brand-orange to-orange-600 text-white w-12 h-12 rounded-xl shrink-0 shadow-lg shadow-orange-500/20 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-laptop-file"></i>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-200 border border-orange-400/20">Tahap 1 &bull; Online</span>
+                                <p class="text-white font-bold text-base mt-1.5">Kamis – Jumat, 17 – 18 Des</p>
+                                <p class="text-emerald-100/80 text-xs mt-0.5">Kegiatan Pelatihan & Pembekalan Daring</p>
+                            </div>
+                        </div>
+
+                        <!-- Uji Sertifikasi Offline -->
+                        <div class="group bg-white/10 hover:bg-white/15 backdrop-blur-md p-5 rounded-2xl border border-white/15 transition-all duration-300 flex items-start gap-4">
+                            <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 text-white w-12 h-12 rounded-xl shrink-0 shadow-lg shadow-emerald-500/20 flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-400/20 text-emerald-200 border border-emerald-300/20">Tahap 2 &bull; Offline</span>
+                                <p class="text-white font-bold text-base mt-1.5">Sabtu, 19 Desember</p>
+                                <p class="text-emerald-100/80 text-xs mt-0.5">Uji Sertifikasi di <strong class="text-white">Hotel Alana Malang</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Syarat Pendidikan Modern Cards -->
+            <div class="px-6 sm:px-10 pt-8">
+                <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5">
+                    <div class="flex items-center gap-2.5 mb-3.5">
+                        <i class="fa-solid fa-circle-info text-brand-orange"></i>
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Ketentuan Prasyarat Pendidikan Skema</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200/70 flex items-center justify-between shadow-sm">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-400 block">Prasyarat Pendidikan</span>
+                                <span class="text-sm font-bold text-brand-orange">Minimal SMA / SMK</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 justify-end">
+                                <span class="px-2.5 py-1 rounded-lg bg-orange-50 text-brand-orange font-bold text-xs border border-orange-200/60">OPLB3</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-orange-50 text-brand-orange font-bold text-xs border border-orange-200/60">POPAL</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-orange-50 text-brand-orange font-bold text-xs border border-orange-200/60">POIPPU</span>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200/70 flex items-center justify-between shadow-sm">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-400 block">Prasyarat Pendidikan</span>
+                                <span class="text-sm font-bold text-brand-green">Minimal D3 / S1</span>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 justify-end">
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-brand-green font-bold text-xs border border-emerald-200/60">MPLB3</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-brand-green font-bold text-xs border border-emerald-200/60">PPPA</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-brand-green font-bold text-xs border border-emerald-200/60">PPPU</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="regForm" class="p-6 sm:p-10 space-y-10">
+                <input type="hidden" id="batch" value="17-18 Des (Pelatihan Online) & 19 Des (Ujian Offline - Hotel Alana Malang)">
+                
+                <!-- Section 1: Data Diri -->
+                <div>
+                    <div class="flex items-center gap-3.5 mb-6">
+                        <div class="bg-gradient-to-br from-brand-green to-brand-greenDark text-white w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-md shadow-green-900/15">01</div>
+                        <div>
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-900">Data Diri Peserta</h3>
+                            <p class="text-xs text-slate-500">Pastikan data yang diisi sesuai dengan kartu identitas (KTP)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label for="nama" class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-regular fa-user"></i>
+                                </div>
+                                <input type="text" id="nama" required class="input-modern w-full pl-10 pr-4 py-3.5 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none placeholder-slate-400 text-sm font-medium" placeholder="Nama lengkap beserta gelar (jika ada)">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="nowa" class="block text-sm font-semibold text-slate-700 mb-1.5">No. WhatsApp Aktif <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-brands fa-whatsapp text-base"></i>
+                                </div>
+                                <input type="tel" id="nowa" required class="input-modern w-full pl-10 pr-4 py-3.5 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none placeholder-slate-400 text-sm font-medium" placeholder="Contoh: 081234567890">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-slate-700 mb-1.5">Email Aktif <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-regular fa-envelope"></i>
+                                </div>
+                                <input type="email" id="email" required class="input-modern w-full pl-10 pr-4 py-3.5 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none placeholder-slate-400 text-sm font-medium" placeholder="nama@email.com">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="kota" class="block text-sm font-semibold text-slate-700 mb-1.5">Asal Kota / Kabupaten <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <input type="text" id="kota" required class="input-modern w-full pl-10 pr-4 py-3.5 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none placeholder-slate-400 text-sm font-medium" placeholder="Contoh: Kota Malang">
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label for="instansi" class="block text-sm font-semibold text-slate-700 mb-1.5">Asal Instansi / Perusahaan <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-regular fa-building"></i>
+                                </div>
+                                <input type="text" id="instansi" required class="input-modern w-full pl-10 pr-4 py-3.5 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none placeholder-slate-400 text-sm font-medium" placeholder="Masukkan nama perusahaan atau instansi tempat bekerja">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Section 2: Pilihan Skema -->
+                <div>
+                    <div class="flex items-center gap-3.5 mb-6">
+                        <div class="bg-gradient-to-br from-brand-green to-brand-greenDark text-white w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-md shadow-green-900/15">02</div>
+                        <div>
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-900">Pilih Skema Sertifikasi</h3>
+                            <p class="text-xs text-slate-500">Pilih salah satu skema uji kompetensi sesuai kualifikasi Anda</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50/70 p-5 sm:p-6 rounded-2xl border border-slate-200/80">
+                        <label for="skema" class="block text-sm font-semibold text-slate-700 mb-2">Skema Kompetensi <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-brand-green">
+                                <i class="fa-solid fa-award text-lg"></i>
+                            </div>
+                            <select id="skema" required class="input-modern w-full pl-11 pr-10 py-4 rounded-xl bg-white border border-slate-200 focus:ring-4 focus:ring-brand-green/10 focus:border-brand-green outline-none text-slate-800 font-semibold text-sm sm:text-base cursor-pointer appearance-none shadow-sm">
+                                <option value="" disabled selected>-- Klik untuk Memilih Skema Sertifikasi --</option>
+                                <option value="PPPA">PPPA — Penanggung Jawab Pengendalian Pencemaran Air (Min. D3)</option>
+                                <option value="POPAL">POPAL — Penanggung Jawab Operasional Pengolahan Air Limbah (Min. SMA)</option>
+                                <option value="PPPU">PPPU — Penanggung Jawab Pengendalian Pencemaran Udara (Min. D3)</option>
+                                <option value="POIPPU">POIPPU — Penanggung Jawab Operasional Instalasi Pengendalian Pencemaran Udara (Min. SMA)</option>
+                                <option value="MPLB3">MPLB3 — Manager Penyimpanan Limbah B3 (Min. D3)</option>
+                                <option value="OPLB3">OPLB3 — Operasional Pengelolaan Limbah B3 (Min. SMA)</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-chevron-down text-sm"></i>
+                            </div>
+                        </div>
+
+                        <div id="skemaInfoBadge" class="hidden mt-3.5 p-3.5 rounded-xl bg-emerald-50/90 border border-emerald-200/80 flex items-center justify-between gap-3 text-xs sm:text-sm">
+                            <div class="flex items-center gap-2.5 text-brand-greenDark">
+                                <i class="fa-solid fa-circle-check text-brand-green"></i>
+                                <span>Skema terpilih: <strong id="skemaSelectedTitle" class="font-bold">-</strong></span>
+                            </div>
+                            <span id="skemaSelectedEdu" class="px-2.5 py-1 rounded-lg bg-white text-brand-green font-bold text-xs shadow-sm border border-emerald-100 shrink-0">Min. D3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Section 3: Upload Dokumen -->
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                        <div class="flex items-center gap-3.5">
+                            <div class="bg-gradient-to-br from-brand-green to-brand-greenDark text-white w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-md shadow-green-900/15">03</div>
+                            <div>
+                                <h3 class="text-lg sm:text-xl font-bold text-slate-900">Unggah Dokumen Persyaratan</h3>
+                                <p class="text-xs text-slate-500">Otomatis disimpan ke dalam folder sesuai Nama Lengkap Anda</p>
+                            </div>
+                        </div>
+                        <span class="self-start sm:self-auto inline-flex items-center gap-1.5 text-xs font-bold bg-orange-50 text-brand-orange border border-orange-200/60 py-1.5 px-3.5 rounded-full">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Maks. 3MB / File
+                        </span>
+                    </div>
+                    
+                    <div id="uploadContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <div id="alertBox" class="hidden p-4 rounded-2xl text-sm font-medium flex items-center gap-3"></div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-brand-orange via-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-2xl shadow-xl shadow-orange-500/20 hover:shadow-orange-500/35 transform hover:-translate-y-0.5 transition-all duration-200 text-base sm:text-lg flex justify-center items-center gap-2.5">
+                    <span>Kirim Pendaftaran Sekarang</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ================= MODAL 1: DETAIL PESERTA & AKSES BERKAS (SIGNED URL) ================= -->
+    <div id="participantDetailModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-modal-pop my-8">
+            <div class="flex items-start justify-between gap-4 pb-5 border-b border-slate-100">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-green to-brand-greenDark text-white flex items-center justify-center font-extrabold text-lg shadow-md">
+                        <i class="fa-solid fa-id-card text-brand-orange"></i>
+                    </div>
+                    <div>
+                        <span id="modalDetailSkemaBadge" class="inline-block px-2.5 py-0.5 rounded-md bg-orange-50 text-brand-orange font-extrabold text-[11px] border border-orange-200 mb-1">SKEMA</span>
+                        <h3 id="modalDetailNama" class="text-xl font-extrabold text-slate-900 leading-tight">-</h3>
+                        <p id="modalDetailInstansi" class="text-xs text-slate-500 font-medium">-</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDetailModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Grid Informasi Biodata -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-5 text-xs">
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                    <span class="text-slate-400 block mb-0.5"><i class="fa-brands fa-whatsapp text-brand-green mr-1"></i> Nomor WhatsApp</span>
+                    <strong id="modalDetailWa" class="text-slate-800 font-bold text-sm">-</strong>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                    <span class="text-slate-400 block mb-0.5"><i class="fa-regular fa-envelope text-brand-orange mr-1"></i> Email Peserta</span>
+                    <strong id="modalDetailEmail" class="text-slate-800 font-bold text-sm truncate block">-</strong>
+                </div>
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60">
+                    <span class="text-slate-400 block mb-0.5"><i class="fa-solid fa-location-dot text-brand-green mr-1"></i> Asal Kota</span>
+                    <strong id="modalDetailKota" class="text-slate-800 font-bold text-sm">-</strong>
+                </div>
+            </div>
+
+            <!-- Daftar Berkas di Storage -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-folder-closed text-brand-orange"></i> Berkas di Bucket <code class="text-brand-green">dokumen_peserta</code>
+                    </h4>
+                    <span class="text-[11px] text-slate-400">Signed URL Aman (Aktif 10 Menit)</span>
+                </div>
+                <div id="modalFilesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Dirender oleh JS -->
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                <button type="button" onclick="closeDetailModal()" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-all">
+                    Tutup Detail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 2: PANDUAN SQL POLICY SUPABASE ================= -->
+    <div id="sqlHelperModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-[2rem] max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-modal-pop my-8">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-orange-50 text-brand-orange border border-orange-200 flex items-center justify-center">
+                        <i class="fa-solid fa-database text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900">Buka Izin Baca Dashboard (RLS Supabase)</h3>
+                        <p class="text-xs text-slate-500">Jalankan sekali di menu SQL Editor Supabase Anda</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeSqlHelperModal()" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed mt-4 mb-3">
+                Agar halaman Dashboard ini bisa menampilkan daftar peserta dari tabel <code class="font-bold text-brand-green">pendaftaran</code> dan membuka pratinjau file dari bucket <code class="font-bold text-brand-orange">dokumen_peserta</code>, jalankan perintah SQL berikut di <strong>SQL Editor Supabase</strong>:
+            </p>
+
+            <div class="relative bg-slate-900 text-emerald-300 p-4 rounded-2xl text-xs font-mono overflow-x-auto border border-slate-800">
+<pre id="sqlCodeSnippet">-- 1. Izinkan Dashboard membaca tabel pendaftaran
+create policy "Allow read pendaftaran"
+on public.pendaftaran
+for select
+to anon
+using (true);
+
+-- 2. Izinkan Dashboard melihat file di bucket dokumen_peserta
+create policy "Allow read dokumen_peserta"
+on storage.objects
+for select
+to anon
+using (bucket_id = 'dokumen_peserta');</pre>
+                <button type="button" onclick="copySqlSnippet()" class="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-brand-orange hover:bg-orange-600 text-white font-sans font-bold text-[11px] shadow-md transition-all">
+                    <i class="fa-regular fa-copy mr-1"></i> Salin SQL
+                </button>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <button type="button" onclick="closeSqlHelperModal()" class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 3: ANIMASI LOADING UPLOAD BERKAS ================= -->
+    <div id="uploadModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-7 sm:p-8 shadow-2xl border border-slate-100 text-center animate-modal-pop">
+            <div class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full bg-emerald-500/15 animate-ping"></div>
+                <div class="absolute inset-2 rounded-full border-4 border-slate-100 border-t-brand-green border-r-brand-orange animate-spin"></div>
+                <div class="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-green to-brand-greenDark text-white flex items-center justify-center shadow-lg shadow-green-900/20">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl animate-float"></i>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-extrabold text-slate-900 mb-1.5">Mengunggah Berkas...</h3>
+            <p id="uploadStepText" class="text-xs sm:text-sm text-slate-500 font-medium mb-6">Menyiapkan folder & enkripsi dokumen persyaratan Anda</p>
+
+            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden mb-2.5 p-0.5">
+                <div id="uploadProgressBar" class="bg-gradient-to-r from-brand-green via-emerald-500 to-brand-orange h-full rounded-full transition-all duration-300" style="width: 10%"></div>
+            </div>
+            <div class="flex justify-between items-center text-xs font-bold text-slate-400">
+                <span id="uploadFileCounter">Memproses...</span>
+                <span id="uploadPercentText" class="text-brand-green">10%</span>
+            </div>
+
+            <p class="mt-5 text-[11px] text-slate-400 bg-slate-50 py-2 px-3 rounded-xl border border-slate-100">
+                Mohon jangan menutup halaman ini hingga proses selesai.
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 4: POP-UP PENDAFTARAN BERHASIL ================= -->
+    <div id="successModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] max-w-md w-full p-7 sm:p-8 shadow-2xl border border-slate-100 text-center relative overflow-hidden animate-modal-pop">
+            <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-40 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="relative w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-emerald-400 to-brand-green text-white flex items-center justify-center shadow-xl shadow-green-600/25 text-3xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+
+            <span class="inline-block px-3 py-1 rounded-full bg-emerald-50 text-brand-green font-bold text-[11px] uppercase tracking-wider border border-emerald-200/60 mb-2">
+                Terkonfirmasi Aman
+            </span>
+            <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Pendaftaran Berhasil!</h3>
+            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed mb-6">
+                Terima kasih! Data diri dan berkas persyaratan Anda telah tersimpan rapi di dalam folder khusus pada sistem <strong class="text-slate-700">LSPLHNS &times; DLH Malang</strong>.
+            </p>
+
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/70 text-left space-y-2.5 mb-6 text-xs sm:text-sm">
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-slate-400 font-medium">Nama Peserta</span>
+                    <span id="summaryNama" class="font-bold text-slate-800 truncate max-w-[200px]">-</span>
+                </div>
+                <div class="border-t border-slate-200/60"></div>
+                <div class="flex justify-between items-center gap-2">
+                    <span class="text-slate-400 font-medium">Skema Uji</span>
+                    <span id="summarySkema" class="font-bold text-brand-green px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200/60">-</span>
+                </div>
+                <div class="border-t border-slate-200/60"></div>
+                <div class="flex justify-between items-start gap-2">
+                    <span class="text-slate-400 font-medium shrink-0">Pelaksanaan</span>
+                    <span class="font-semibold text-slate-700 text-right text-xs">17–18 Des (Online) &<br>19 Des (Hotel Alana Malang)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" id="closeSuccessModalBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 px-4 rounded-xl transition-all text-xs sm:text-sm">
+                    Tutup
+                </button>
+                <button type="button" onclick="document.getElementById('successModal').classList.add('hidden'); switchMainView('dashboard');" class="w-full bg-gradient-to-r from-brand-green to-brand-greenDark hover:from-brand-greenDark hover:to-slate-900 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-green-900/15 transition-all text-xs sm:text-sm">
+                    Lihat Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= 1. INISIALISASI SUPABASE =================
+        const supabaseUrl = 'https://oxyitleuqfxjjwzcsnqq.supabase.co';
+        const supabaseKey = 'sb_publishable_CL-e6ccSr6r6s5-Xq1xBiQ_kRhWryyT';
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // State Global Peserta untuk Dashboard
+        let allParticipants = [];
+        let activeSkemaFilter = 'ALL';
+
+        // Metadata 6 Skema Sertifikasi (Ikon Font Awesome + Warna Oranye/Hijau)
+        const skemaMeta = {
+            "PPPA": { title: "PPPA (Pengendalian Pencemaran Air)", short: "Pencemaran Air", edu: "Min. D3 / S1", group: "D3", icon: "fa-droplet", theme: "green" },
+            "POPAL": { title: "POPAL (Operasional Pengolahan Air Limbah)", short: "Operasional IPAL", edu: "Min. SMA / SMK", group: "SMA", icon: "fa-faucet-drip", theme: "orange" },
+            "PPPU": { title: "PPPU (Pengendalian Pencemaran Udara)", short: "Pencemaran Udara", edu: "Min. D3 / S1", group: "D3", icon: "fa-wind", theme: "green" },
+            "POIPPU": { title: "POIPPU (Operasional Instalasi Pencemaran Udara)", short: "Instalasi Udara", edu: "Min. SMA / SMK", group: "SMA", icon: "fa-fan", theme: "orange" },
+            "MPLB3": { title: "MPLB3 (Manager Penyimpanan Limbah B3)", short: "Manager Limbah B3", edu: "Min. D3 / S1", group: "D3", icon: "fa-biohazard", theme: "green" },
+            "OPLB3": { title: "OPLB3 (Operasional Pengelolaan Limbah B3)", short: "Operasional LB3", edu: "Min. SMA / SMK", group: "SMA", icon: "fa-dumpster-fire", theme: "orange" }
+        };
+
+        // ================= 2. NAVIGASI SWITCH VIEW (DASHBOARD <-> FORM) =================
+        function switchMainView(target) {
+            const dashboardView = document.getElementById('dashboardView');
+            const formView = document.getElementById('formView');
+            const navBtnDashboard = document.getElementById('navBtnDashboard');
+            const navBtnForm = document.getElementById('navBtnForm');
+
+            if (target === 'dashboard') {
+                dashboardView.classList.remove('hidden');
+                formView.classList.add('hidden');
+                navBtnDashboard.className = "flex items-center gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-gradient-to-r from-brand-green to-brand-greenDark text-white shadow-md shadow-green-900/15";
+                navBtnForm.className = "flex items-center gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 text-slate-600 hover:text-slate-900";
+                fetchParticipantsData();
+            } else {
+                dashboardView.classList.add('hidden');
+                formView.classList.remove('hidden');
+                navBtnForm.className = "flex items-center gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-gradient-to-r from-brand-orange to-orange-600 text-white shadow-md shadow-orange-500/20";
+                navBtnDashboard.className = "flex items-center gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 text-slate-600 hover:text-slate-900";
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ================= 3. FUNGSI TOAST NOTIFICATION =================
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastIconBox = document.getElementById('toastIconBox');
+
+            toastMsg.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check";
+                toastIconBox.className = "w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-emerald-400";
+            } else if (type === 'error') {
+                toastIcon.className = "fa-solid fa-triangle-exclamation";
+                toastIconBox.className = "w-9 h-9 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0 text-red-400";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-info";
+                toastIconBox.className = "w-9 h-9 rounded-xl bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center shrink-0 text-brand-orange";
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+
+        // ================= 4. LOGIKA DASHBOARD & FETCH DATA SUPABASE =================
+        async function fetchParticipantsData() {
+            const refreshIcon = document.getElementById('refreshSpinIcon');
+            const rlsBanner = document.getElementById('rlsWarningBanner');
+            refreshIcon.classList.add('fa-spin');
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('pendaftaran')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allParticipants = data || [];
+                
+                // Jika tabel masih kosong atau RLS menahan data (return 0 rows), beri opsi info RLS
+                if (allParticipants.length === 0) {
+                    rlsBanner.classList.remove('hidden');
+                } else {
+                    rlsBanner.classList.add('hidden');
+                }
+
+                renderDashboardStats();
+                renderParticipantsTable();
+            } catch (err) {
+                console.error('Gagal memuat data dashboard:', err);
+                rlsBanner.classList.remove('hidden');
+                showToast('Tidak dapat memuat data dari Supabase. Cek izin SELECT RLS Anda.', 'error');
+                renderDashboardStats();
+                renderParticipantsTable();
+            } finally {
+                setTimeout(() => refreshIcon.classList.remove('fa-spin'), 400);
+            }
+        }
+
+        // Render Statistik KPI & 6 Kartu Skema
+        function renderDashboardStats() {
+            const total = allParticipants.length;
+            const managerCount = allParticipants.filter(p => ['PPPA', 'PPPU', 'MPLB3'].includes(p.skema)).length;
+            const operatorCount = allParticipants.filter(p => ['POPAL', 'POIPPU', 'OPLB3'].includes(p.skema)).length;
+            
+            const uniqueInstansi = new Set(allParticipants.map(p => (p.instansi || '').trim().toLowerCase()).filter(Boolean)).size;
+            const uniqueKota = new Set(allParticipants.map(p => (p.kota || '').trim().toLowerCase()).filter(Boolean)).size;
+
+            document.getElementById('statTotalPeserta').textContent = total;
+            document.getElementById('statTotalManager').textContent = managerCount;
+            document.getElementById('statTotalOperator').textContent = operatorCount;
+            document.getElementById('statTotalInstansi').textContent = uniqueInstansi;
+            document.getElementById('statTotalKotaBadge').textContent = `${uniqueKota} Kota`;
+
+            // Render 6 Kartu Skema
+            const skemaGrid = document.getElementById('skemaCardsGrid');
+            skemaGrid.innerHTML = '';
+
+            Object.keys(skemaMeta).forEach(code => {
+                const meta = skemaMeta[code];
+                const count = allParticipants.filter(p => p.skema === code).length;
+                const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+                const isSelected = activeSkemaFilter === code;
+
+                const isGreen = meta.theme === 'green';
+                const activeBorder = isSelected 
+                    ? (isGreen ? 'ring-2 ring-brand-green border-brand-green bg-emerald-50/40' : 'ring-2 ring-brand-orange border-brand-orange bg-orange-50/40')
+                    : 'border-slate-200/80 hover:border-slate-300 bg-slate-50/60';
+
+                const badgeColor = isGreen 
+                    ? 'bg-emerald-100 text-brand-green border-emerald-200' 
+                    : 'bg-orange-100 text-brand-orange border-orange-200';
+
+                const barColor = isGreen ? 'bg-brand-green' : 'bg-brand-orange';
+
+                skemaGrid.insertAdjacentHTML('beforeend', `
+                    <button type="button" onclick="filterBySkemaCard('${code}')" class="text-left p-4 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${activeBorder}">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="px-2.5 py-1 rounded-lg font-extrabold text-xs border ${badgeColor}">${code}</span>
+                            <i class="fa-solid ${meta.icon} ${isGreen ? 'text-brand-green' : 'text-brand-orange'} text-base"></i>
+                        </div>
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-2xl font-extrabold text-slate-900">${count}</span>
+                            <span class="text-[11px] font-bold text-slate-400">${percent}%</span>
+                        </div>
+                        <p class="text-[11px] font-semibold text-slate-500 truncate mt-0.5">${meta.short}</p>
+                        <div class="w-full bg-slate-200/70 h-1.5 rounded-full overflow-hidden mt-2.5">
+                            <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                    </button>
+                `);
+            });
+        }
+
+        function filterBySkemaCard(skemaCode) {
+            activeSkemaFilter = skemaCode;
+            document.getElementById('filterSkemaSelect').value = skemaCode;
+            renderDashboardStats();
+            renderParticipantsTable();
+        }
+
+        // Render Tabel Peserta
+        function renderParticipantsTable() {
+            const tbody = document.getElementById('participantsTableBody');
+            const emptyState = document.getElementById('tableEmptyState');
+            const searchVal = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const skemaVal = document.getElementById('filterSkemaSelect').value;
+
+            const filtered = allParticipants.filter(item => {
+                const matchSkema = skemaVal === 'ALL' || item.skema === skemaVal;
+                const matchSearch = !searchVal || 
+                    (item.nama || '').toLowerCase().includes(searchVal) ||
+                    (item.instansi || '').toLowerCase().includes(searchVal) ||
+                    (item.kota || '').toLowerCase().includes(searchVal) ||
+                    (item.nowa || '').toLowerCase().includes(searchVal) ||
+                    (item.email || '').toLowerCase().includes(searchVal);
+                return matchSkema && matchSearch;
+            });
+
+            document.getElementById('tableCountSubtitle').textContent = `Menampilkan ${filtered.length} dari ${allParticipants.length} peserta`;
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            filtered.forEach((p, idx) => {
+                const meta = skemaMeta[p.skema] || { theme: 'green', edu: '-' };
+                const isGreen = meta.theme === 'green';
+                const skemaBadgeClass = isGreen
+                    ? 'bg-emerald-50 text-brand-green border-emerald-200'
+                    : 'bg-orange-50 text-brand-orange border-orange-200';
+
+                // Format Tanggal
+                const dateObj = p.created_at ? new Date(p.created_at) : new Date();
+                const formattedDate = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                const formattedTime = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                // Hitung jumlah berkas terunggah
+                const docFields = [
+                    { key: 'file_ktp', label: 'KTP', icon: 'fa-id-card' },
+                    { key: 'file_ijazah', label: 'Ijazah', icon: 'fa-graduation-cap' },
+                    { key: 'file_cv', label: 'CV', icon: 'fa-file-pdf' },
+                    { key: 'file_foto', label: 'Foto', icon: 'fa-portrait' },
+                    { key: 'file_suket', label: 'Suket', icon: 'fa-briefcase' },
+                    { key: 'file_ss_siapkerja', label: 'SiapKerja', icon: 'fa-mobile-screen' }
+                ];
+                const uploadedDocs = docFields.filter(d => Boolean(p[d.key]));
+
+                // Buat nomor WA bersih untuk link wa.me
+                const cleanWa = (p.nowa || '').replace(/[^0-9]/g, '').replace(/^0/, '62');
+
+                const rowHTML = `
+                    <tr class="hover:bg-slate-50/90 transition-colors">
+                        <td class="py-4 px-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl ${isGreen ? 'bg-emerald-100 text-brand-green' : 'bg-orange-100 text-brand-orange'} font-extrabold text-xs flex items-center justify-center shrink-0">
+                                    ${(p.nama || 'P').substring(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-900 text-sm">${escapeHtml(p.nama || '-')}</p>
+                                    <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                                        <i class="fa-regular fa-clock"></i> ${formattedDate} • ${formattedTime}
+                                    </p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            <div class="space-y-1">
+                                <a href="https://wa.me/${cleanWa}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-bold text-brand-green hover:underline">
+                                    <i class="fa-brands fa-whatsapp"></i> ${escapeHtml(p.nowa || '-')}
+                                </a>
+                                <p class="text-xs text-slate-500 truncate max-w-[170px]">${escapeHtml(p.email || '-')}</p>
+                            </div>
+                        </td>
+                        <td class="py-4 px-4">
+                            <p class="font-bold text-slate-800 text-xs sm:text-sm">${escapeHtml(p.instansi || '-')}</p>
+                            <span class="inline-flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
+                                <i class="fa-solid fa-location-dot text-brand-orange"></i> ${escapeHtml(p.kota || '-')}
+                            </span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl font-extrabold text-xs border ${skemaBadgeClass}">
+                                <i class="fa-solid fa-certificate"></i> ${escapeHtml(p.skema || '-')}
+                            </span>
+                            <span class="block text-[10px] text-slate-400 font-semibold mt-1">${meta.edu}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
+                                    <i class="fa-solid fa-folder-check text-brand-green mr-1"></i> ${uploadedDocs.length}/6 File
+                                </span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-5 text-right">
+                            <button type="button" onclick="openParticipantDetail(${idx})" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-orange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-xs shadow-sm transition-all">
+                                <i class="fa-solid fa-eye"></i> Detail & Berkas
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', rowHTML);
+            });
+        }
+
+        // Event Listener Search & Dropdown Filter
+        document.getElementById('searchInput').addEventListener('input', renderParticipantsTable);
+        document.getElementById('filterSkemaSelect').addEventListener('change', function() {
+            activeSkemaFilter = this.value;
+            renderDashboardStats();
+            renderParticipantsTable();
+        });
+
+        // ================= 5. MODAL DETAIL BERKAS PESERTA & SIGNED URL SUPABASE =================
+        function openParticipantDetail(filteredIndex) {
+            const searchVal = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+            const skemaVal = document.getElementById('filterSkemaSelect').value;
+            const filtered = allParticipants.filter(item => {
+                const matchSkema = skemaVal === 'ALL' || item.skema === skemaVal;
+                const matchSearch = !searchVal || 
+                    (item.nama || '').toLowerCase().includes(searchVal) ||
+                    (item.instansi || '').toLowerCase().includes(searchVal) ||
+                    (item.kota || '').toLowerCase().includes(searchVal) ||
+                    (item.nowa || '').toLowerCase().includes(searchVal) ||
+                    (item.email || '').toLowerCase().includes(searchVal);
+                return matchSkema && matchSearch;
+            });
+
+            const participant = filtered[filteredIndex];
+            if (!participant) return;
+
+            document.getElementById('modalDetailSkemaBadge').textContent = `SKEMA ${participant.skema || '-'}`;
+            document.getElementById('modalDetailNama').textContent = participant.nama || '-';
+            document.getElementById('modalDetailInstansi').textContent = participant.instansi || '-';
+            document.getElementById('modalDetailWa').textContent = participant.nowa || '-';
+            document.getElementById('modalDetailEmail').textContent = participant.email || '-';
+            document.getElementById('modalDetailKota').textContent = participant.kota || '-';
+
+            const filesGrid = document.getElementById('modalFilesGrid');
+            filesGrid.innerHTML = '';
+
+            const docsList = [
+                { key: 'file_ktp', label: 'Scan KTP', icon: 'fa-id-card' },
+                { key: 'file_ijazah', label: 'Scan Ijazah Terakhir', icon: 'fa-graduation-cap' },
+                { key: 'file_cv', label: 'Curriculum Vitae (CV)', icon: 'fa-file-pdf' },
+                { key: 'file_foto', label: 'Pas Foto 3x4 (Bg Merah)', icon: 'fa-image' },
+                { key: 'file_suket', label: 'Surat Keterangan Kerja', icon: 'fa-briefcase' },
+                { key: 'file_ss_siapkerja', label: 'SS Akun Siap Kerja', icon: 'fa-mobile-screen-button' }
+            ];
+
+            docsList.forEach(doc => {
+                const filePath = participant[doc.key];
+                if (filePath) {
+                    filesGrid.insertAdjacentHTML('beforeend', `
+                        <div class="p-3.5 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-xl bg-brand-green text-white flex items-center justify-center shrink-0">
+                                    <i class="fa-solid ${doc.icon}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="font-bold text-slate-800 text-xs">${doc.label}</p>
+                                    <p class="text-[11px] text-slate-500 truncate">${escapeHtml(filePath)}</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="openStorageSignedUrl('${escapeHtml(filePath)}')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-brand-orange hover:text-white text-brand-green border border-emerald-200 font-bold text-xs transition-all shrink-0 shadow-sm">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Buka
+                            </button>
+                        </div>
+                    `);
+                } else {
+                    filesGrid.insertAdjacentHTML('beforeend', `
+                        <div class="p-3.5 rounded-2xl border border-slate-200/70 bg-slate-50 flex items-center justify-between gap-3 opacity-60">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-slate-200 text-slate-400 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid ${doc.icon}"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-600 text-xs">${doc.label}</p>
+                                    <p class="text-[11px] text-slate-400">Tidak dilampirkan</p>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+
+            document.getElementById('participantDetailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('participantDetailModal').classList.add('hidden');
+        }
+
+        // Membuat Signed URL sementara untuk membuka file di bucket private dokumen_peserta
+        async function openStorageSignedUrl(filePath) {
+            if (filePath.startsWith('demo_folder/')) {
+                showToast('Ini adalah data simulasi. Pada data asli, berkas akan terbuka dari Supabase Storage.', 'info');
+                return;
+            }
+            try {
+                showToast('Membuat tautan aman sementara (Signed URL)...', 'info');
+                const { data, error } = await supabaseClient.storage
+                    .from('dokumen_peserta')
+                    .createSignedUrl(filePath, 600); // Aktif 10 menit
+
+                if (error) throw error;
+                if (data?.signedUrl) {
+                    window.open(data.signedUrl, '_blank');
+                }
+            } catch (err) {
+                console.error('Gagal membuat Signed URL:', err);
+                showToast('Gagal membuka berkas. Pastikan Policy SELECT pada bucket dokumen_peserta sudah diaktifkan.', 'error');
+            }
+        }
+
+        // ================= 6. FITUR EXPORT KE CSV / EXCEL & DATA DEMO =================
+        function exportToCSV() {
+            if (allParticipants.length === 0) {
+                showToast('Belum ada data peserta untuk di-export!', 'error');
+                return;
+            }
+            const headers = ['Waktu Daftar', 'Nama Lengkap', 'No WhatsApp', 'Email', 'Kota', 'Instansi', 'Skema', 'Batch', 'Path KTP', 'Path Ijazah', 'Path CV', 'Path Foto', 'Path Suket', 'Path SS SiapKerja'];
+            const rows = allParticipants.map(p => [
+                p.created_at || '',
+                `"${(p.nama || '').replace(/"/g, '""')}"`,
+                `"${(p.nowa || '')}"`,
+                `"${(p.email || '')}"`,
+                `"${(p.kota || '').replace(/"/g, '""')}"`,
+                `"${(p.instansi || '').replace(/"/g, '""')}"`,
+                p.skema || '',
+                `"${(p.batch || '')}"`,
+                p.file_ktp || '',
+                p.file_ijazah || '',
+                p.file_cv || '',
+                p.file_foto || '',
+                p.file_suket || '',
+                p.file_ss_siapkerja || ''
+            ]);
+
+            const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `Rekap_Peserta_LSPLHNS_DLH_Malang_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Rekap CSV berhasil diunduh!', 'success');
+        }
+
+        function loadDemoData() {
+            allParticipants = [
+                {
+                    created_at: new Date().toISOString(),
+                    nama: 'Ir. Bagus Pratama, S.T.',
+                    nowa: '081234567891',
+                    email: 'bagus.pratama@industrihijau.co.id',
+                    kota: 'Kota Malang',
+                    instansi: 'PT Bumi Hijau Lestari',
+                    skema: 'PPPA',
+                    batch: '17-18 Des (Online) & 19 Des (Offline)',
+                    file_ktp: 'demo_folder/Bagus_Pratama_ST/ktp_Bagus_Pratama_ST.pdf',
+                    file_ijazah: 'demo_folder/Bagus_Pratama_ST/ijazah_Bagus_Pratama_ST.pdf',
+                    file_cv: 'demo_folder/Bagus_Pratama_ST/cv_Bagus_Pratama_ST.pdf',
+                    file_foto: 'demo_folder/Bagus_Pratama_ST/foto_Bagus_Pratama_ST.jpg',
+                    file_suket: 'demo_folder/Bagus_Pratama_ST/suket_Bagus_Pratama_ST.pdf',
+                    file_ss_siapkerja: 'demo_folder/Bagus_Pratama_ST/ss_Bagus_Pratama_ST.png'
+                },
+                {
+                    created_at: new Date(Date.now() - 3600 * 1000 * 3).toISOString(),
+                    nama: 'Rina Kartika Sari, A.Md.',
+                    nowa: '085711223344',
+                    email: 'rina.enviro@pabrikmalang.com',
+                    kota: 'Kab. Malang',
+                    instansi: 'CV Tirta Mandiri Sejahtera',
+                    skema: 'MPLB3',
+                    batch: '17-18 Des (Online) & 19 Des (Offline)',
+                    file_ktp: 'demo_folder/Rina_Kartika/ktp.jpg',
+                    file_ijazah: 'demo_folder/Rina_Kartika/ijazah.pdf',
+                    file_cv: 'demo_folder/Rina_Kartika/cv.pdf',
+                    file_foto: 'demo_folder/Rina_Kartika/foto.jpg',
+                    file_suket: null,
+                    file_ss_siapkerja: 'demo_folder/Rina_Kartika/ss.jpg'
+                },
+                {
+                    created_at: new Date(Date.now() - 3600 * 1000 * 8).toISOString(),
+                    nama: 'Dimas Wahyu Nugroho',
+                    nowa: '082199887766',
+                    email: 'dimas.wahyu@gmail.com',
+                    kota: 'Kota Surabaya',
+                    instansi: 'PT Petrokimia Nusantara',
+                    skema: 'POPAL',
+                    batch: '17-18 Des (Online) & 19 Des (Offline)',
+                    file_ktp: 'demo_folder/Dimas_Wahyu/ktp.jpg',
+                    file_ijazah: 'demo_folder/Dimas_Wahyu/ijazah.pdf',
+                    file_cv: 'demo_folder/Dimas_Wahyu/cv.pdf',
+                    file_foto: 'demo_folder/Dimas_Wahyu/foto.jpg',
+                    file_suket: 'demo_folder/Dimas_Wahyu/suket.pdf',
+                    file_ss_siapkerja: 'demo_folder/Dimas_Wahyu/ss.jpg'
+                },
+                {
+                    created_at: new Date(Date.now() - 3600 * 1000 * 16).toISOString(),
+                    nama: 'Hendro Siswanto',
+                    nowa: '081355667788',
+                    email: 'hendro.ops@kawasanindustri.id',
+                    kota: 'Kota Batu',
+                    instansi: 'RSUD Sehat Sentosa',
+                    skema: 'OPLB3',
+                    batch: '17-18 Des (Online) & 19 Des (Offline)',
+                    file_ktp: 'demo_folder/Hendro_Siswanto/ktp.jpg',
+                    file_ijazah: 'demo_folder/Hendro_Siswanto/ijazah.pdf',
+                    file_cv: 'demo_folder/Hendro_Siswanto/cv.pdf',
+                    file_foto: 'demo_folder/Hendro_Siswanto/foto.jpg',
+                    file_suket: 'demo_folder/Hendro_Siswanto/suket.pdf',
+                    file_ss_siapkerja: 'demo_folder/Hendro_Siswanto/ss.jpg'
+                }
+            ];
+            document.getElementById('rlsWarningBanner').classList.add('hidden');
+            renderDashboardStats();
+            renderParticipantsTable();
+            showToast('Data contoh berhasil dimuat ke Dashboard!', 'success');
+        }
+
+        function openSqlHelperModal() {
+            document.getElementById('sqlHelperModal').classList.remove('hidden');
+        }
+        function closeSqlHelperModal() {
+            document.getElementById('sqlHelperModal').classList.add('hidden');
+        }
+        function copySqlSnippet() {
+            const code = document.getElementById('sqlCodeSnippet').innerText;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = code;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('Kode SQL berhasil disalin ke clipboard!', 'success');
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+        }
+
+        // ================= 7. LOGIKA FORM PENDAFTARAN & AUTO-FOLDER UPLOAD =================
+        const skemaSelect = document.getElementById('skema');
+        const skemaInfoBadge = document.getElementById('skemaInfoBadge');
+        const skemaSelectedTitle = document.getElementById('skemaSelectedTitle');
+        const skemaSelectedEdu = document.getElementById('skemaSelectedEdu');
+
+        skemaSelect.addEventListener('change', function() {
+            const info = skemaMeta[this.value];
+            if (info) {
+                skemaSelectedTitle.textContent = info.title;
+                skemaSelectedEdu.textContent = info.edu;
+                skemaInfoBadge.classList.remove('hidden');
+            }
+        });
+
+        const uploadItems = [
+            { id: 'KTP', label: 'Scan KTP', accept: '.pdf,image/*', required: true, icon: 'fa-id-card' },
+            { id: 'Ijazah', label: 'Scan Ijazah Terakhir', accept: '.pdf,image/*', required: true, icon: 'fa-graduation-cap' },
+            { id: 'CV', label: 'Curriculum Vitae (CV)', accept: '.pdf', required: true, icon: 'fa-file-pdf' },
+            { id: 'Foto', label: 'Pas Foto 3x4 (Bg Merah)', accept: 'image/*', required: true, icon: 'fa-user-tie' },
+            { id: 'Suket_Kerja', label: 'Surat Keterangan Kerja', accept: '.pdf,image/*', required: false, icon: 'fa-briefcase' },
+            { id: 'SS_SiapKerja', label: 'SS Akun Siap Kerja', accept: 'image/*', required: true, icon: 'fa-mobile-screen' }
+        ];
+
+        const uploadContainer = document.getElementById('uploadContainer');
+
+        uploadItems.forEach(item => {
+            const reqSpan = item.required 
+                ? '<span class="text-red-500">*</span>' 
+                : '<span class="text-slate-400 font-normal text-[11px] ml-1">(Opsional)</span>';
+            const formatText = item.accept.includes('pdf') && item.accept.includes('image') 
+                ? 'PDF atau Gambar' 
+                : (item.accept.includes('pdf') ? 'Khusus PDF' : 'Khusus Gambar');
+
+            const boxHTML = `
+                <div class="relative group">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">${item.label} ${reqSpan}</label>
+                    <label for="${item.id}" class="flex flex-col items-center justify-center w-full h-36 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-slate-50/60 hover:bg-emerald-50/40 hover:border-brand-green/60 transition-all duration-200 p-4 text-center">
+                        <div id="${item.id}-iconWrap" class="w-10 h-10 rounded-xl bg-white border border-slate-200/80 shadow-sm flex items-center justify-center mb-2.5 text-slate-400 group-hover:text-brand-green group-hover:scale-105 transition-all">
+                            <i class="fa-solid ${item.icon}"></i>
+                        </div>
+                        <p id="${item.id}-actionText" class="text-xs font-semibold text-brand-green mb-0.5">Pilih File Dokumen</p>
+                        <p id="${item.id}-name" data-default="${formatText}" class="text-[11px] text-slate-400 truncate max-w-[190px]">${formatText}</p>
+                        <input id="${item.id}" type="file" class="hidden file-input" accept="${item.accept}" ${item.required ? 'required' : ''} />
+                    </label>
+                </div>
+            `;
+            uploadContainer.insertAdjacentHTML('beforeend', boxHTML);
+        });
+
+        const fileInputs = document.querySelectorAll('.file-input');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const nameDisplay = document.getElementById(`${this.id}-name`);
+                const actionText = document.getElementById(`${this.id}-actionText`);
+                const iconWrap = document.getElementById(`${this.id}-iconWrap`);
+                const parentLabel = this.closest('label');
+                const defaultText = nameDisplay.getAttribute('data-default');
+                
+                if (this.files[0]) {
+                    if (this.files[0].size > 3 * 1024 * 1024) {
+                        showToast(`File "${this.files[0].name}" terlalu besar. Maksimal ukuran file adalah 3 MB!`, 'error');
+                        this.value = ''; 
+                        nameDisplay.textContent = defaultText;
+                        actionText.textContent = 'Pilih File Dokumen';
+                        nameDisplay.classList.remove('text-slate-700', 'font-semibold');
+                        parentLabel.classList.remove('border-brand-green', 'bg-emerald-50/50', 'border-solid');
+                        iconWrap.classList.remove('bg-brand-green', 'text-white', 'border-brand-green');
+                    } else {
+                        const fileSizeKB = (this.files[0].size / 1024).toFixed(0);
+                        actionText.textContent = `Terpilih (${fileSizeKB} KB)`;
+                        nameDisplay.textContent = this.files[0].name;
+                        nameDisplay.classList.add('text-slate-700', 'font-semibold');
+                        parentLabel.classList.add('border-brand-green', 'bg-emerald-50/50', 'border-solid');
+                        iconWrap.classList.add('bg-brand-green', 'text-white', 'border-brand-green');
+                    }
+                }
+            });
+        });
+
+        // Elemen Modal Loading & Success
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadPercentText = document.getElementById('uploadPercentText');
+        const uploadStepText = document.getElementById('uploadStepText');
+        const uploadFileCounter = document.getElementById('uploadFileCounter');
+
+        const successModal = document.getElementById('successModal');
+        const summaryNama = document.getElementById('summaryNama');
+        const summarySkema = document.getElementById('summarySkema');
+        const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
+
+        closeSuccessModalBtn.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        function updateUploadProgress(percent, stepMessage, counterMessage) {
+            uploadProgressBar.style.width = `${percent}%`;
+            uploadPercentText.textContent = `${percent}%`;
+            if (stepMessage) uploadStepText.textContent = stepMessage;
+            if (counterMessage) uploadFileCounter.textContent = counterMessage;
+        }
+
+        function formatFolderName(nama) {
+            const cleanName = nama
+                .trim()
+                .replace(/[^a-zA-Z0-9\s_-]/g, '')
+                .replace(/\s+/g, '_');
+            return cleanName || `Peserta_${Date.now()}`;
+        }
+
+        async function uploadFileToSupabase(file, prefix, folderName) {
+            if (!file) return null;
+            const fileExt = file.name.split('.').pop();
+            const uniqueCode = Math.random().toString(36).substring(2, 6);
+            const filePath = `${folderName}/${prefix}_${folderName}_${uniqueCode}.${fileExt}`;
+            
+            const { data, error } = await supabaseClient.storage
+                .from('dokumen_peserta')
+                .upload(filePath, file);
+
+            if (error) throw error;
+            return data.path;
+        }
+
+        document.getElementById('regForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('alertBox');
+            
+            btn.disabled = true;
+            alertBox.classList.add('hidden');
+            uploadModal.classList.remove('hidden');
+            updateUploadProgress(8, 'Menyiapkan folder & dokumen peserta...', 'Tahap persiapan');
+
+            try {
+                const namaVal = document.getElementById('nama').value;
+                const skemaVal = document.getElementById('skema').value;
+                const participantFolder = formatFolderName(namaVal);
+
+                const tasks = [
+                    { file: document.getElementById('KTP').files[0], prefix: 'ktp', label: 'Scan KTP' },
+                    { file: document.getElementById('Ijazah').files[0], prefix: 'ijazah', label: 'Scan Ijazah Terakhir' },
+                    { file: document.getElementById('CV').files[0], prefix: 'cv', label: 'Curriculum Vitae (CV)' },
+                    { file: document.getElementById('Foto').files[0], prefix: 'foto', label: 'Pas Foto 3x4' },
+                    { file: document.getElementById('Suket_Kerja').files[0], prefix: 'suket', label: 'Surat Keterangan Kerja' },
+                    { file: document.getElementById('SS_SiapKerja').files[0], prefix: 'ss_siapkerja', label: 'SS Akun Siap Kerja' }
+                ];
+
+                const uploadedPaths = {};
+                const activeTasks = tasks.filter(t => t.file);
+                let completedCount = 0;
+
+                for (const task of tasks) {
+                    if (task.file) {
+                        const currentProgress = Math.round(10 + (completedCount / activeTasks.length) * 70);
+                        updateUploadProgress(
+                            currentProgress,
+                            `Mengunggah ${task.label} ke folder ${participantFolder}/...`,
+                            `Berkas ${completedCount + 1} dari ${activeTasks.length}`
+                        );
+                        uploadedPaths[task.prefix] = await uploadFileToSupabase(task.file, task.prefix, participantFolder);
+                        completedCount++;
+                    } else {
+                        uploadedPaths[task.prefix] = null;
+                    }
+                }
+
+                updateUploadProgress(90, 'Menyimpan data peserta ke database...', 'Hampir selesai');
+
+                const { error: dbError } = await supabaseClient
+                    .from('pendaftaran')
+                    .insert([
+                        {
+                            nama: namaVal,
+                            nowa: document.getElementById('nowa').value,
+                            email: document.getElementById('email').value,
+                            kota: document.getElementById('kota').value,
+                            instansi: document.getElementById('instansi').value,
+                            batch: document.getElementById('batch').value,
+                            skema: skemaVal,
+                            file_ktp: uploadedPaths['ktp'],
+                            file_ijazah: uploadedPaths['ijazah'],
+                            file_cv: uploadedPaths['cv'],
+                            file_foto: uploadedPaths['foto'],
+                            file_suket: uploadedPaths['suket'],
+                            file_ss_siapkerja: uploadedPaths['ss_siapkerja']
+                        }
+                    ]);
+
+                if (dbError) throw dbError;
+
+                updateUploadProgress(100, 'Pendaftaran berhasil disimpan!', 'Selesai 100%');
+
+                setTimeout(() => {
+                    uploadModal.classList.add('hidden');
+                    summaryNama.textContent = namaVal;
+                    summarySkema.textContent = skemaVal;
+                    successModal.classList.remove('hidden');
+
+                    document.getElementById('regForm').reset();
+                    skemaInfoBadge.classList.add('hidden');
+
+                    fileInputs.forEach(input => {
+                        const nameDisplay = document.getElementById(`${input.id}-name`);
+                        const actionText = document.getElementById(`${input.id}-actionText`);
+                        const iconWrap = document.getElementById(`${input.id}-iconWrap`);
+                        const parentLabel = input.closest('label');
+                        
+                        actionText.textContent = 'Pilih File Dokumen';
+                        nameDisplay.textContent = nameDisplay.getAttribute('data-default');
+                        nameDisplay.classList.remove('text-slate-700', 'font-semibold');
+                        parentLabel.classList.remove('border-brand-green', 'bg-emerald-50/50', 'border-solid');
+                        iconWrap.classList.remove('bg-brand-green', 'text-white', 'border-brand-green');
+                    });
+                }, 450);
+
+            } catch (error) {
+                console.error('Error pendaftaran:', error);
+                uploadModal.classList.add('hidden');
+                showToast('Gagal mengunggah pendaftaran. Periksa koneksi atau policy Supabase Anda.', 'error');
+
+                alertBox.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-red-600 text-lg"></i>
+                    <span><strong>Gagal mengirim pendaftaran:</strong> ${error.message || 'Terjadi kendala jaringan atau izin akses database.'}</span>
+                `;
+                alertBox.className = "p-4 rounded-2xl text-sm font-medium flex items-center gap-3 bg-red-50 text-red-800 border border-red-200";
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Muat data dashboard saat halaman pertama kali dibuka
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchParticipantsData();
+        });
+    </script>
+</body>
+</html>
